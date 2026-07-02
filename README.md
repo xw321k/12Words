@@ -6,7 +6,15 @@
 
 ## 中文
 
-`12Words` 是一款专为极客、Web3 爱好者及隐私至上者打造的**纯本地、零信任、去中心化**的数字资产与密码安全保险箱。我们坚信：**您的身家性命，不应托付给任何人的服务器。**
+## ❓ 你是否也面临这样的困扰？
+
+如果你的桌面上也堆满了各式各样的 `.txt` 文件，里面零散地记录着你的游戏账号、软件卡密、常用邮箱、临时便签，甚至是某些记不住的服务器命令行……
+
+随着时间推移，这些文件越来越多，极其难以管理。直到某一天，你想找回几年前注册的一个老账号，却要在电脑的各个文件夹里翻找大半天，甚至还面临着明文存储被木马窃取的风险。
+
+**`12Words` 就是为了彻底终结这一痛点而生的。** 
+
+它将你电脑里那些混乱、危险的明文 TXT，统一收纳进一个 100% 纯本地、绝对加密的数字资产保险箱。**你只需要把资产存入 `12Words`，无论过去多少年，无论你是更换新设备还是重装操作系统，只需握紧你的 12 个助记词钥匙及资产文件，随时随地，你都能百分之百完美找回你最珍贵的数字资产！**
 
 ### 📸 软件截图
 ![12Words 主界面](./screenshots/UI1.png)
@@ -33,7 +41,15 @@
 
 ## English
 
-`12Words` is a **100% local, zero-knowledge, and decentralized** digital asset and password vault built for geeks, Web3 enthusiasts, and privacy purists. We believe that **your most sensitive data should never be trusted to anyone else's server.**
+## ❓ Are you facing the same headache?
+
+If your desktop is littered with various `.txt` files containing game accounts, software licenses, random emails, temporary notes, or some long server commands that you can never memorize...
+
+As time goes by, these files multiply, becoming an absolute nightmare to organize. Then one day, when you desperately need to retrieve an old account from years ago, you find yourself digging through folders for hours—while leaving your credentials exposed in plaintext to potential malware.
+
+**`12Words` was born to eliminate this exact pain point.**
+
+It transforms your cluttered, insecure plaintext TXT files into a unified, 100% local, and bulletproof encrypted digital asset vault. **Simply store everything in `12Words`. No matter how many years pass, whether you upgrade to a new PC or wipe your operating system—as long as you hold your 12-word mnemonic keys, you can flawlessly recover your most critical digital assets anytime, anywhere!**
 
 ### 📸 Screenshots
 ![12Words Main UI](./screenshots/generator.png)
