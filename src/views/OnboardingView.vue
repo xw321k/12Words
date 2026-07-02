@@ -15,6 +15,8 @@ const seedInfo = ref('')
 // Import mode
 const importPhrase = ref('')
 const showImportInput = ref(false)
+const wordInputs = ref<string[]>(Array(12).fill(''))
+const activeInput = ref(0)
 
 // Verification
 const verifyIndex = ref(0)
@@ -22,6 +24,7 @@ const currentOptions = ref<string[]>([])
 const userChoices = ref<string[]>([])
 const verifyError = ref(false)
 const isImport = ref(false)
+const savedTxtPath = ref('')
 
 function shuffle(arr: string[]): string[] {
   const a = [...arr]
@@ -72,35 +75,79 @@ async function handleGenerate() {
   }
 }
 
-function showImport() {
-  showImportInput.value = true
+async function handleSaveTxt() {
+  try {
+    const path = await vault.saveMnemonicTxt()
+    savedTxtPath.value = path
+  } catch (e: any) {
+    error.value = String(e)
+  }
+}
+
+async function showImport() {
   error.value = ''
+  // Check if vault file exists
+  const exists = await vault.vaultExists()
+  if (!exists) {
+    // No vault file → prompt user to select backup file first
+    try {
+      await vault.importBackup()
+      // After import, show the import input
+      showImportInput.value = true
+    } catch (e: any) {
+      // User cancelled or error — just show the input anyway
+      showImportInput.value = true
+    }
+    return
+  }
+  showImportInput.value = true
 }
 
 async function handleImport() {
-  const phrase = importPhrase.value.trim().toLowerCase().replace(/\s+/g, ' ')
-  const words = phrase.split(' ')
-  if (words.length !== 12) {
-    error.value = '请输入 12 个助记词，用空格分隔'
+  const words = wordInputs.value.map(w => w.trim().toLowerCase())
+  if (words.some(w => !w)) {
+    error.value = '请填写所有 12 个单词'
     return
   }
+  const phrase = words.join(' ')
   loading.value = true
   error.value = ''
   try {
     await vault.importPhrase(phrase)
-    seedInfo.value = `Seed: ${vault.userId.slice(0, 16)}...`
+    // Try to load entries
+    await vault.loadEntries()
     isImport.value = true
     showImportInput.value = false
-    // Skip show step, go straight to verify
-    userChoices.value = new Array(12).fill('')
-    verifyIndex.value = 0
-    verifyError.value = false
-    currentOptions.value = generateOptions(vault.words[0])
-    step.value = 'verify'
+    step.value = 'done'
   } catch (e: any) {
     error.value = '无效的助记词，请检查拼写'
   } finally {
     loading.value = false
+  }
+}
+
+function onWordInput(e: Event, index: number) {
+  const val = (e.target as HTMLInputElement).value.trim()
+  wordInputs.value[index] = val
+  if (val.split(/\s+/).length > 1) {
+    const parts = val.split(/\s+/).filter(Boolean)
+    parts.forEach((w, i) => {
+      if (index + i < 12) wordInputs.value[index + i] = w.toLowerCase()
+    })
+    const next = index + parts.length
+    if (next < 12) {
+      activeInput.value = next
+      setTimeout(() => {
+        const el = document.getElementById(`wi-${next}`)
+        el?.focus()
+      }, 50)
+    }
+  } else if (val && index < 11) {
+    activeInput.value = index + 1
+    setTimeout(() => {
+      const el = document.getElementById(`wi-${index + 1}`)
+      el?.focus()
+    }, 50)
   }
 }
 
@@ -143,6 +190,9 @@ function backToStart() {
   importPhrase.value = ''
   showImportInput.value = false
   isImport.value = false
+  wordInputs.value = Array(12).fill('')
+  activeInput.value = 0
+  savedTxtPath.value = ''
   error.value = ''
 }
 </script>
@@ -153,7 +203,7 @@ function backToStart() {
     :style="{ background: 'var(--color-surface-secondary)' }"
   >
     <div class="w-full max-w-lg mx-6">
-      <!-- ========== Step: Generate / Import ========== -->
+      <!-- ========== Main Page ========== -->
       <div v-if="step === 'generate'" class="text-center">
         <div class="text-4xl mb-4">🔐</div>
         <h1 class="text-xl font-semibold mb-2" :style="{ color: 'var(--color-text-primary)' }">
@@ -164,7 +214,6 @@ function backToStart() {
         </p>
         <div v-if="error" class="mb-4 text-xs" :style="{ color: 'var(--color-danger)' }">{{ error }}</div>
 
-        <!-- Generate new -->
         <button
           @click="handleGenerate"
           :disabled="loading"
@@ -182,7 +231,6 @@ function backToStart() {
           <div class="flex-1 h-px" :style="{ background: 'var(--color-border)' }" />
         </div>
 
-        <!-- Verify existing mnemonic -->
         <button
           v-if="!showImportInput"
           @click="showImport"
@@ -195,19 +243,28 @@ function backToStart() {
           验证已有助记词
         </button>
 
-        <!-- Import textarea (appears after clicking verify existing) -->
+        <!-- Import: 12 word inputs -->
         <div v-else class="text-left">
-          <textarea
-            v-model="importPhrase"
-            placeholder="在此粘贴 12 个助记词，用空格分隔..."
-            rows="3"
-            class="w-full px-3 py-2 rounded-lg text-xs outline-none resize-none transition-colors duration-100 mb-3"
-            :style="{
-              background: 'var(--color-surface)',
-              border: '1px solid var(--color-border)',
-              color: 'var(--color-text-primary)',
-            }"
-          />
+          <p class="text-xs mb-3 text-center" :style="{ color: 'var(--color-text-secondary)' }">
+            输入 12 个助记词（支持粘贴整段）
+          </p>
+          <div class="grid grid-cols-2 gap-2 mb-3">
+            <div v-for="i in 12" :key="i" class="flex items-center gap-1">
+              <span class="text-[10px] w-4 text-right flex-shrink-0" :style="{ color: 'var(--color-text-tertiary)' }">{{ i }}.</span>
+              <input
+                :id="`wi-${i - 1}`"
+                v-model="wordInputs[i - 1]"
+                @input="onWordInput($event, i - 1)"
+                placeholder="word"
+                class="flex-1 px-2 py-1.5 rounded text-xs outline-none"
+                :style="{
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
+                  color: 'var(--color-text-primary)',
+                }"
+              />
+            </div>
+          </div>
           <div class="flex gap-2">
             <button
               @click="showImportInput = false"
@@ -218,7 +275,7 @@ function backToStart() {
             </button>
             <button
               @click="handleImport"
-              :disabled="loading || !importPhrase.trim()"
+              :disabled="loading || wordInputs.some(w => !w.trim())"
               class="flex-1 py-2 rounded-lg text-xs font-medium border-none cursor-pointer disabled:opacity-40"
               :style="{ background: 'var(--color-accent)', color: '#fff' }"
             >
@@ -228,7 +285,7 @@ function backToStart() {
         </div>
       </div>
 
-      <!-- ========== Step: Show (backup) ========== -->
+      <!-- ========== Show (backup) ========== -->
       <div v-else-if="step === 'show'" class="text-center">
         <button
           @click="backToStart"
@@ -243,7 +300,6 @@ function backToStart() {
         <h2 class="text-lg font-semibold mb-2" :style="{ color: 'var(--color-text-primary)' }">
           请备份你的助记词
         </h2>
-        <!-- Fixed HTML rendering with v-html -->
         <p
           class="text-xs mb-5"
           :style="{ color: 'var(--color-text-secondary)' }"
@@ -260,13 +316,28 @@ function backToStart() {
               class="px-3 py-1.5 rounded-md text-sm font-medium"
               :style="{ background: 'var(--color-surface-tertiary)', color: 'var(--color-text-primary)' }"
             >
-              {{ i + 1 }}. {{ word }}
+              {{ word }}
             </span>
           </div>
           <div class="mt-3 text-xs text-center" :style="{ color: 'var(--color-text-tertiary)' }">
             {{ seedInfo }}
           </div>
         </div>
+
+        <!-- Save to txt button -->
+        <button
+          @click="handleSaveTxt"
+          class="w-full py-2 rounded-lg text-xs font-medium border cursor-pointer transition-colors duration-100 mb-3"
+          :style="{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)', background: 'transparent' }"
+          @mouseenter="(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-surface-tertiary)' }"
+          @mouseleave="(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }"
+        >
+          💾 保存到 txt 文件
+        </button>
+        <p v-if="savedTxtPath" class="text-xs mb-3" :style="{ color: 'var(--color-success)' }">
+          已保存至: {{ savedTxtPath }}
+        </p>
+
         <button
           @click="handleShowDone"
           class="w-full py-2.5 rounded-lg text-sm font-medium border-none cursor-pointer"
@@ -278,7 +349,7 @@ function backToStart() {
         </button>
       </div>
 
-      <!-- ========== Step: Verify ========== -->
+      <!-- ========== Verify ========== -->
       <div v-else-if="step === 'verify'">
         <button
           @click="isImport ? backToStart() : (step = 'show')"
@@ -360,7 +431,7 @@ function backToStart() {
         </p>
       </div>
 
-      <!-- ========== Step: Done ========== -->
+      <!-- ========== Done ========== -->
       <div v-else-if="step === 'done'" class="text-center">
         <div class="text-4xl mb-4">✅</div>
         <h2 class="text-lg font-semibold mb-2" :style="{ color: 'var(--color-text-primary)' }">
@@ -384,7 +455,7 @@ function backToStart() {
               class="px-2 py-0.5 rounded text-xs font-medium"
               :style="{ background: 'var(--color-surface-tertiary)', color: 'var(--color-text-primary)' }"
             >
-              {{ i + 1 }}. {{ word }}
+              {{ word }}
             </span>
           </div>
           <div class="mt-3 text-xs" :style="{ color: 'var(--color-text-tertiary)' }">{{ seedInfo }}</div>

@@ -143,11 +143,19 @@ export const useVaultStore = defineStore('vault', () => {
     return result
   }
 
+  async function saveMnemonicTxt(): Promise<string> {
+    return await invoke<string>('save_mnemonic_txt', { phrase: phrase.value })
+  }
+
+  async function vaultExists(): Promise<boolean> {
+    return await invoke<boolean>('vault_exists')
+  }
+
   return {
     mnemonic, isInitialized, entries, clipboardTimer,
     phrase, words, seedHex, userId, entryCount,
     initialize, generate, confirmMnemonic, importPhrase, lock,
     loadEntries, saveEntries, addEntry, updateEntry, deleteEntry,
-    generatePassword, copyToClipboard, exportBackup, importBackup,
+    generatePassword, copyToClipboard, exportBackup, importBackup, saveMnemonicTxt, vaultExists,
   }
 })

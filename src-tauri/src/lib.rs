@@ -116,6 +116,29 @@ fn open_url(url: String) -> Result<(), String> {
     Ok(())
 }
 
+/// Save mnemonic to a txt file in current working directory
+#[tauri::command]
+fn save_mnemonic_txt(phrase: String) -> Result<String, String> {
+    let content = format!(
+        "{}\n\n\
+        建议将以上 12 个助记词物理抄写并保存在安全的地方，然后删除此文件。\n\
+        这是恢复密码库的唯一方式，丢失后无法找回。\n",
+        phrase
+    );
+    let path = std::env::current_dir()
+        .map_err(|e| format!("获取目录失败: {}", e))?
+        .join("12words_mnemonic.txt");
+    std::fs::write(&path, &content)
+        .map_err(|e| format!("写入文件失败: {}", e))?;
+    Ok(path.to_string_lossy().to_string())
+}
+
+/// Check if vault file exists in app data dir
+#[tauri::command]
+fn vault_exists(app_handle: tauri::AppHandle) -> bool {
+    vault_path(&app_handle).exists()
+}
+
 /// Export vault file to a user-chosen location
 #[tauri::command]
 fn export_vault(app_handle: tauri::AppHandle, seed_hex: String) -> Result<String, String> {
@@ -200,6 +223,8 @@ pub fn run() {
             import_mnemonic,
             generate_password,
             open_url,
+            save_mnemonic_txt,
+            vault_exists,
             export_vault,
             import_vault,
             read_vault,
