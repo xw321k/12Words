@@ -12,11 +12,13 @@ export interface MnemonicResult {
 
 export interface VaultEntry {
   id: string
+  category: string
   title: string
   url: string
   username: string
   password: string
   note: string
+  fields: string
   updated_at: string
 }
 
@@ -34,6 +36,7 @@ export const useVaultStore = defineStore('vault', () => {
   const isInitialized = ref(false)
   const entries = ref<VaultEntry[]>([])
   const clipboardTimer = ref<ReturnType<typeof setTimeout> | null>(null)
+  const filterCategory = ref('')
 
   // -- Computed --
   const phrase = computed(() => mnemonic.value?.phrase ?? '')
@@ -171,7 +174,7 @@ export const useVaultStore = defineStore('vault', () => {
 
   return {
     mnemonic, isInitialized, entries, clipboardTimer,
-    phrase, words, seedHex, userId, entryCount,
+    phrase, words, seedHex, userId, entryCount, filterCategory,
     initialize, generate, confirmMnemonic, importPhrase, lock,
     loadEntries, saveEntries, addEntry, updateEntry, deleteEntry,
     generatePassword, copyToClipboard, exportBackup, importBackup, saveMnemonicTxt, vaultExists,

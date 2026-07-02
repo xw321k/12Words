@@ -92,11 +92,13 @@ pub fn decrypt_vault(seed_hex: &str, encrypted: &[u8]) -> Result<Vec<u8>, String
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct VaultEntry {
     pub id: String,
+    pub category: String,
     pub title: String,
     pub url: String,
     pub username: String,
     pub password: String,
     pub note: String,
+    pub fields: String,   // JSON string for extra category-specific fields
     pub updated_at: String,
 }
 
@@ -156,11 +158,13 @@ mod tests {
         let vault = VaultData {
             entries: vec![VaultEntry {
                 id: "1".to_string(),
+                category: "Login".to_string(),
                 title: "Test".to_string(),
                 url: "https://example.com".to_string(),
                 username: "user".to_string(),
                 password: "pass".to_string(),
                 note: "note".to_string(),
+                fields: "{}".to_string(),
                 updated_at: "2024-01-01T00:00:00Z".to_string(),
             }],
         };

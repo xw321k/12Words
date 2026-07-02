@@ -206,12 +206,6 @@ function backToStart() {
           <div class="flex-1 h-px" :style="{ background: 'var(--color-border)' }" />
         </div>
 
-        <div class="flex items-center gap-3 my-5">
-          <div class="flex-1 h-px" :style="{ background: 'var(--color-border)' }" />
-          <span class="text-xs" :style="{ color: 'var(--color-text-tertiary)' }">或者</span>
-          <div class="flex-1 h-px" :style="{ background: 'var(--color-border)' }" />
-        </div>
-
         <div v-if="!showImportInput">
           <button
             @click="showImport"

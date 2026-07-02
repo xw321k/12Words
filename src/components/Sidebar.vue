@@ -1,24 +1,43 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useVaultStore } from '../stores/vault'
 
 const router = useRouter()
 const route = useRoute()
+const vault = useVaultStore()
 
 type NavItem = {
   id: string
   label: string
   icon: string
   route: string
+  category: string
 }
 
 const navItems: NavItem[] = [
-  { id: 'passwords', label: '密码', icon: '🔑', route: '/passwords' },
-  { id: 'generator', label: '生成器', icon: '⚡', route: '/generator' },
-  { id: 'settings', label: '设置', icon: '⚙', route: '/settings' },
+  { id: 'all', label: '全部', icon: '📋', route: '/passwords', category: '' },
+  { id: 'login', label: '账号密码', icon: '🔑', route: '/passwords', category: 'Login' },
+  { id: 'apikey', label: 'API密钥', icon: '🔌', route: '/passwords', category: 'ApiKey' },
+  { id: 'license', label: '软件卡密', icon: '🏷️', route: '/passwords', category: 'License' },
+  { id: 'card', label: '银行卡', icon: '💳', route: '/passwords', category: 'Card' },
+  { id: 'identity', label: '证件', icon: '🪪', route: '/passwords', category: 'Identity' },
+  { id: 'crypto', label: '钱包私钥', icon: '₿', route: '/passwords', category: 'Crypto' },
+  { id: 'note', label: '加密便签', icon: '📄', route: '/passwords', category: 'Note' },
 ]
 
-const activeId = computed(() => route.name as string)
+// Add separator, generator, settings
+const bottomItems: NavItem[] = [
+  { id: 'generator', label: '生成器', icon: '⚡', route: '/generator', category: '' },
+  { id: 'settings', label: '设置', icon: '⚙', route: '/settings', category: '' },
+]
+
+function setCategory(cat: string) {
+  vault.filterCategory = cat
+  router.push('/passwords')
+}
+
+const activeCategory = computed(() => vault.filterCategory)
 </script>
 
 <template>
@@ -26,41 +45,65 @@ const activeId = computed(() => route.name as string)
     class="w-56 flex-shrink-0 flex flex-col border-r"
     :style="{ borderColor: 'var(--color-border)', background: 'var(--color-surface-secondary)' }"
   >
-    <!-- Logo / Brand -->
     <div
-      class="h-14 flex items-center px-5 border-b text-sm font-semibold tracking-wide"
+      class="h-14 flex items-center px-5 border-b text-sm font-semibold tracking-wide flex-shrink-0"
       :style="{ borderColor: 'var(--color-border)' }"
     >
       <span class="mr-2">🔐</span>
       12Words
     </div>
 
-    <!-- Navigation -->
-    <div class="flex-1 px-2 py-4 space-y-1">
-      <button
+    <!-- Category filters -->
+    <div class="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
+      <div
         v-for="item in navItems"
         :key="item.id"
-        @click="router.push(item.route)"
-        class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors duration-100"
+        @click="setCategory(item.category)"
+        class="flex items-center gap-3 px-3 py-1.5 rounded-md text-xs cursor-pointer transition-colors duration-100"
         :style="{
-          background: activeId === item.id ? 'var(--color-surface)' : 'transparent',
-          color: activeId === item.id ? 'var(--color-accent)' : 'var(--color-text-secondary)',
+          background: activeCategory === item.category && route.name === 'passwords' ? 'var(--color-surface)' : 'transparent',
+          color: activeCategory === item.category && route.name === 'passwords' ? 'var(--color-accent)' : 'var(--color-text-secondary)',
         }"
         @mouseenter="(e) => {
-          if (activeId !== item.id) (e.currentTarget as HTMLElement).style.background = 'var(--color-surface-tertiary)'
+          if (!(activeCategory === item.category && route.name === 'passwords'))
+            (e.currentTarget as HTMLElement).style.background = 'var(--color-surface-tertiary)'
         }"
         @mouseleave="(e) => {
-          if (activeId !== item.id) (e.currentTarget as HTMLElement).style.background = 'transparent'
+          if (!(activeCategory === item.category && route.name === 'passwords'))
+            (e.currentTarget as HTMLElement).style.background = 'transparent'
         }"
       >
-        <span class="text-base">{{ item.icon }}</span>
+        <span class="text-sm">{{ item.icon }}</span>
         <span>{{ item.label }}</span>
-      </button>
+      </div>
+
+      <div class="my-2 border-t" :style="{ borderColor: 'var(--color-border)' }" />
+
+      <div
+        v-for="item in bottomItems"
+        :key="item.id"
+        @click="router.push(item.route)"
+        class="flex items-center gap-3 px-3 py-1.5 rounded-md text-xs cursor-pointer transition-colors duration-100"
+        :style="{
+          background: route.name === item.id ? 'var(--color-surface)' : 'transparent',
+          color: route.name === item.id ? 'var(--color-accent)' : 'var(--color-text-secondary)',
+        }"
+        @mouseenter="(e) => {
+          if (route.name !== item.id)
+            (e.currentTarget as HTMLElement).style.background = 'var(--color-surface-tertiary)'
+        }"
+        @mouseleave="(e) => {
+          if (route.name !== item.id)
+            (e.currentTarget as HTMLElement).style.background = 'transparent'
+        }"
+      >
+        <span class="text-sm">{{ item.icon }}</span>
+        <span>{{ item.label }}</span>
+      </div>
     </div>
 
-    <!-- Footer -->
     <div
-      class="px-4 py-3 border-t text-xs"
+      class="px-4 py-3 border-t text-xs flex-shrink-0"
       :style="{ borderColor: 'var(--color-border)', color: 'var(--color-text-tertiary)' }"
     >
       v0.1.0
