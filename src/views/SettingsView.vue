@@ -107,9 +107,17 @@ async function handleExport() {
         </div>
         <div class="rounded-xl p-5" :style="{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }">
           <h2 class="text-xs font-semibold mb-3" :style="{ color: 'var(--color-text-primary)' }">{{ t('settings.about') }}</h2>
-          <div class="text-xs space-y-1" :style="{ color: 'var(--color-text-tertiary)' }">
-            <p>{{ t('settings.aboutLine1') }}</p>
-            <p>{{ t('settings.aboutLine2') }}</p>
+          <div class="text-xs space-y-2" :style="{ color: 'var(--color-text-tertiary)' }">
+            <p :style="{ color: 'var(--color-text-primary)' }">12Words v0.1.0</p>
+            <p class="text-[11px]">{{ t('settings.aboutLine1') }}</p>
+            <p class="text-[11px]">{{ t('settings.aboutLine2') }}</p>
+            <div class="h-px my-2" :style="{ background: 'var(--color-border)' }" />
+            <p class="text-[11px]" :style="{ color: 'var(--color-text-secondary)' }">{{ t('settings.aboutAuthor') }}</p>
+            <button @click="vault.openUrl('https://github.com/xw321k/12words')"
+              class="inline-flex items-center gap-1.5 text-[11px] font-medium border-none cursor-pointer bg-transparent px-0 hover:underline"
+              :style="{ color: 'var(--color-accent)' }">
+              <span>🔗</span> {{ t('settings.aboutOpenSource') }}
+            </button>
           </div>
         </div>
       </div>

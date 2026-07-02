@@ -174,11 +174,15 @@ export const useVaultStore = defineStore('vault', () => {
     return await invoke<boolean>('vault_exists')
   }
 
+  async function openUrl(url: string) {
+    await invoke('open_url', { url })
+  }
+
   return {
     mnemonic, isInitialized, entries, clipboardTimer,
     phrase, words, seedHex, userId, entryCount, filterCategory, isFromStorage,
     initialize, generate, confirmMnemonic, importPhrase, lock,
     loadEntries, saveEntries, addEntry, updateEntry, deleteEntry,
-    generatePassword, copyToClipboard, exportBackup, importBackup, saveMnemonicTxt, vaultExists,
+    generatePassword, copyToClipboard, exportBackup, importBackup, saveMnemonicTxt, vaultExists, openUrl,
   }
 })

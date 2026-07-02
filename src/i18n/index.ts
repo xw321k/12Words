@@ -55,6 +55,8 @@ export const messages: Record<Locale, Record<string, string>> = {
     'settings.about': '关于',
     'settings.aboutLine1': '12Words v0.1.0 - 零信任密码管理器',
     'settings.aboutLine2': '基于 BIP39 + AES-256-GCM',
+    'settings.aboutAuthor': '作者：John_Nai',
+    'settings.aboutOpenSource': 'GitHub Open Source',
     'settings.language': '语言',
 
     'onboarding.welcome': '欢迎使用 12Words',
@@ -169,6 +171,8 @@ export const messages: Record<Locale, Record<string, string>> = {
     'settings.about': 'About',
     'settings.aboutLine1': '12Words v0.1.0 - Zero Trust Password Manager',
     'settings.aboutLine2': 'Powered by BIP39 + AES-256-GCM',
+    'settings.aboutAuthor': 'Author：John_Nai',
+    'settings.aboutOpenSource': 'GitHub Open Source',
     'settings.language': 'Language',
 
     'onboarding.welcome': 'Welcome to 12Words',
