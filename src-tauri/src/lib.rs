@@ -133,74 +133,47 @@ fn save_mnemonic_txt(phrase: String) -> Result<String, String> {
     Ok(path.to_string_lossy().to_string())
 }
 
+/// Export vault file — takes path + raw encrypted data, just writes
+#[tauri::command]
+fn export_vault(dest_path: String, encrypted_data: Vec<u8>) -> Result<String, String> {
+    std::fs::write(&dest_path, &encrypted_data)
+        .map_err(|e| format!("导出失败: {}", e))?;
+    Ok("导出成功".to_string())
+}
+
+/// Import vault file — takes path + seed, reads decrypts and writes to app data
+#[tauri::command]
+fn import_vault_from(app_handle: tauri::AppHandle, source_path: String, seed_hex: String) -> Result<Vec<crypto::VaultEntry>, String> {
+    let encrypted = std::fs::read(&source_path)
+        .map_err(|e| format!("读取备份文件失败: {}", e))?;
+    let data = crypto::VaultData::from_encrypted(&seed_hex, &encrypted)?;
+
+    // Write to app data dir
+    let dest = vault_path(&app_handle);
+    if let Some(parent) = dest.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("创建目录失败: {}", e))?;
+    }
+    std::fs::write(&dest, &encrypted)
+        .map_err(|e| format!("写入密码库失败: {}", e))?;
+    Ok(data.entries)
+}
+
+/// Read raw encrypted vault bytes
+#[tauri::command]
+fn read_vault_raw(app_handle: tauri::AppHandle) -> Result<Vec<u8>, String> {
+    let path = vault_path(&app_handle);
+    if !path.exists() {
+        return Err("密码库文件不存在".to_string());
+    }
+    std::fs::read(&path)
+        .map_err(|e| format!("读取失败: {}", e))
+}
+
 /// Check if vault file exists in app data dir
 #[tauri::command]
 fn vault_exists(app_handle: tauri::AppHandle) -> bool {
     vault_path(&app_handle).exists()
-}
-
-/// Export vault file to a user-chosen location
-#[tauri::command]
-fn export_vault(app_handle: tauri::AppHandle, seed_hex: String) -> Result<String, String> {
-    use tauri_plugin_dialog::DialogExt;
-
-    let source = vault_path(&app_handle);
-    if !source.exists() {
-        return Err("密码库文件不存在，请先添加密码数据".to_string());
-    }
-
-    // Re-encrypt to ensure the file is fresh
-    let encrypted = std::fs::read(&source)
-        .map_err(|e| format!("读取密码库失败: {}", e))?;
-    let data = crypto::VaultData::from_encrypted(&seed_hex, &encrypted)?;
-    let re_encrypted = data.to_encrypted(&seed_hex)?;
-
-    let dest = app_handle.dialog()
-        .file()
-        .add_filter("加密密码库", &["12words"])
-        .set_file_name("vault_export.12words")
-        .blocking_save_file();
-
-    match dest {
-        Some(path) => {
-            let p = path.into_path().map_err(|e| format!("路径错误: {}", e))?;
-            std::fs::write(&p, &re_encrypted)
-                .map_err(|e| format!("导出失败: {}", e))?;
-            Ok("导出成功".to_string())
-        }
-        None => Err("用户取消了导出".to_string()),
-    }
-}
-
-/// Import vault file from a user-chosen location
-#[tauri::command]
-fn import_vault(app_handle: tauri::AppHandle, seed_hex: String) -> Result<Vec<crypto::VaultEntry>, String> {
-    use tauri_plugin_dialog::DialogExt;
-
-    let file = app_handle.dialog()
-        .file()
-        .add_filter("加密密码库", &["12words"])
-        .blocking_pick_file();
-
-    match file {
-        Some(path) => {
-            let p = path.into_path().map_err(|e| format!("路径错误: {}", e))?;
-            let encrypted = std::fs::read(&p)
-                .map_err(|e| format!("读取备份文件失败: {}", e))?;
-            let data = crypto::VaultData::from_encrypted(&seed_hex, &encrypted)?;
-
-            // Write to app data dir
-            let dest = vault_path(&app_handle);
-            if let Some(parent) = dest.parent() {
-                std::fs::create_dir_all(parent)
-                    .map_err(|e| format!("创建目录失败: {}", e))?;
-            }
-            std::fs::write(&dest, &encrypted)
-                .map_err(|e| format!("写入密码库失败: {}", e))?;
-            Ok(data.entries)
-        }
-        None => Err("用户取消了导入".to_string()),
-    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -226,7 +199,8 @@ pub fn run() {
             save_mnemonic_txt,
             vault_exists,
             export_vault,
-            import_vault,
+            import_vault_from,
+            read_vault_raw,
             read_vault,
             write_vault,
         ])

@@ -13,10 +13,8 @@ const error = ref('')
 const seedInfo = ref('')
 
 // Import mode
-const importPhrase = ref('')
 const showImportInput = ref(false)
 const wordInputs = ref<string[]>(Array(12).fill(''))
-const activeInput = ref(0)
 
 // Verification
 const verifyIndex = ref(0)
@@ -84,29 +82,22 @@ async function handleSaveTxt() {
   }
 }
 
-async function showImport() {
+function showImport() {
   error.value = ''
-  // Check if vault file exists
-  const exists = await vault.vaultExists()
-  if (!exists) {
-    // No vault file → prompt user to select backup file first
-    try {
-      await vault.importBackup()
-      // After import, show the import input
-      showImportInput.value = true
-    } catch (e: any) {
-      // User cancelled or error — just show the input anyway
-      showImportInput.value = true
-    }
-    return
-  }
+  wordInputs.value = ['']
   showImportInput.value = true
 }
 
+function onImportPaste(e: Event) {
+  const val = (e.target as HTMLTextAreaElement).value
+  wordInputs.value[0] = val
+}
+
 async function handleImport() {
-  const words = wordInputs.value.map(w => w.trim().toLowerCase())
-  if (words.some(w => !w)) {
-    error.value = '请填写所有 12 个单词'
+  const text = wordInputs.value[0].trim().toLowerCase()
+  const words = text.split(/\s+/).filter(Boolean)
+  if (words.length !== 12) {
+    error.value = `请提供 12 个助记词（当前 ${words.length} 个）`
     return
   }
   const phrase = words.join(' ')
@@ -114,8 +105,19 @@ async function handleImport() {
   error.value = ''
   try {
     await vault.importPhrase(phrase)
-    // Try to load entries
-    await vault.loadEntries()
+    const exists = await vault.vaultExists()
+    if (!exists) {
+      try {
+        await vault.importBackup()
+      } catch (e: any) {
+        loading.value = false
+        if (e === '用户取消了导入') return
+        error.value = '无法解密备份文件，请确认助记词和备份文件匹配'
+        return
+      }
+    } else {
+      await vault.loadEntries()
+    }
     isImport.value = true
     showImportInput.value = false
     step.value = 'done'
@@ -123,31 +125,6 @@ async function handleImport() {
     error.value = '无效的助记词，请检查拼写'
   } finally {
     loading.value = false
-  }
-}
-
-function onWordInput(e: Event, index: number) {
-  const val = (e.target as HTMLInputElement).value.trim()
-  wordInputs.value[index] = val
-  if (val.split(/\s+/).length > 1) {
-    const parts = val.split(/\s+/).filter(Boolean)
-    parts.forEach((w, i) => {
-      if (index + i < 12) wordInputs.value[index + i] = w.toLowerCase()
-    })
-    const next = index + parts.length
-    if (next < 12) {
-      activeInput.value = next
-      setTimeout(() => {
-        const el = document.getElementById(`wi-${next}`)
-        el?.focus()
-      }, 50)
-    }
-  } else if (val && index < 11) {
-    activeInput.value = index + 1
-    setTimeout(() => {
-      const el = document.getElementById(`wi-${index + 1}`)
-      el?.focus()
-    }, 50)
   }
 }
 
@@ -187,11 +164,9 @@ function handleDone() {
 
 function backToStart() {
   step.value = 'generate'
-  importPhrase.value = ''
   showImportInput.value = false
   isImport.value = false
   wordInputs.value = Array(12).fill('')
-  activeInput.value = 0
   savedTxtPath.value = ''
   error.value = ''
 }
@@ -231,41 +206,67 @@ function backToStart() {
           <div class="flex-1 h-px" :style="{ background: 'var(--color-border)' }" />
         </div>
 
-        <button
-          v-if="!showImportInput"
-          @click="showImport"
-          :disabled="loading"
-          class="w-full py-2.5 rounded-lg text-sm font-medium border cursor-pointer transition-colors duration-100"
-          :style="{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)', background: 'transparent' }"
-          @mouseenter="(e) => { if (!loading) (e.currentTarget as HTMLElement).style.background = 'var(--color-surface-tertiary)' }"
-          @mouseleave="(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }"
-        >
-          验证已有助记词
-        </button>
+        <div class="flex items-center gap-3 my-5">
+          <div class="flex-1 h-px" :style="{ background: 'var(--color-border)' }" />
+          <span class="text-xs" :style="{ color: 'var(--color-text-tertiary)' }">或者</span>
+          <div class="flex-1 h-px" :style="{ background: 'var(--color-border)' }" />
+        </div>
 
-        <!-- Import: 12 word inputs -->
-        <div v-else class="text-left">
-          <p class="text-xs mb-3 text-center" :style="{ color: 'var(--color-text-secondary)' }">
-            输入 12 个助记词（支持粘贴整段）
-          </p>
-          <div class="grid grid-cols-2 gap-2 mb-3">
-            <div v-for="i in 12" :key="i" class="flex items-center gap-1">
-              <span class="text-[10px] w-4 text-right flex-shrink-0" :style="{ color: 'var(--color-text-tertiary)' }">{{ i }}.</span>
-              <input
-                :id="`wi-${i - 1}`"
-                v-model="wordInputs[i - 1]"
-                @input="onWordInput($event, i - 1)"
-                placeholder="word"
-                class="flex-1 px-2 py-1.5 rounded text-xs outline-none"
-                :style="{
-                  background: 'var(--color-surface)',
-                  border: '1px solid var(--color-border)',
-                  color: 'var(--color-text-primary)',
-                }"
-              />
+        <div v-if="!showImportInput">
+          <button
+            @click="showImport"
+            :disabled="loading"
+            class="w-full py-2.5 rounded-lg text-sm font-medium border cursor-pointer transition-colors duration-100"
+            :style="{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)', background: 'transparent' }"
+            @mouseenter="(e) => { if (!loading) (e.currentTarget as HTMLElement).style.background = 'var(--color-surface-tertiary)' }"
+            @mouseleave="(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }"
+          >
+            验证已有助记词
+          </button>
+
+          <!-- 12Words 提示 -->
+          <div
+            class="mt-6 rounded-xl p-4 text-left"
+            :style="{ background: 'var(--color-surface)', border: '1px solid var(--color-accent)' }"
+          >
+            <div class="flex items-start gap-2">
+              <span class="text-sm flex-shrink-0 mt-0.5">🛡️</span>
+              <div class="text-[11px] space-y-1.5" :style="{ color: 'var(--color-text-secondary)' }">
+                <p class="font-semibold" :style="{ color: 'var(--color-text-primary)' }">12Words 提示</p>
+                <p>本软件为 100% 纯本地零信任架构，我们不设服务器，绝不上传您的任何隐私。</p>
+                <p class="font-medium" :style="{ color: 'var(--color-text-primary)' }">注意：12 个助记词是解密您密码箱的唯一钥匙，而本地加密文件（vault.encrypted）是您数据的唯一载体。二者缺一不可。</p>
+                <p>建议您：</p>
+                <ul class="list-disc pl-4">
+                  <li>抄写并妥善保管好这 12 个助记词。</li>
+                  <li>定期使用设置页的一键备份功能，将加密文件导出至您的 U 盘或私人云盘中。</li>
+                </ul>
+              </div>
             </div>
           </div>
-          <div class="flex gap-2">
+        </div>
+
+        <!-- Import: textarea -->
+        <div v-else class="text-left">
+          <p class="text-xs mb-3 text-center" :style="{ color: 'var(--color-text-secondary)' }">
+            输入 12 个助记词，用空格分隔（支持直接粘贴整段）
+          </p>
+          <textarea
+            v-model="wordInputs[0]"
+            @input="onImportPaste"
+            placeholder="在此粘贴或输入 12 个助记词..."
+            rows="4"
+            class="w-full px-3 py-2 rounded-lg text-xs outline-none resize-none transition-colors duration-100"
+            :style="{
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-text-primary)',
+            }"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+          />
+          <div class="flex gap-2 mt-3">
             <button
               @click="showImportInput = false"
               class="flex-1 py-2 rounded-lg text-xs border cursor-pointer"
@@ -275,7 +276,7 @@ function backToStart() {
             </button>
             <button
               @click="handleImport"
-              :disabled="loading || wordInputs.some(w => !w.trim())"
+              :disabled="loading || !wordInputs[0].trim()"
               class="flex-1 py-2 rounded-lg text-xs font-medium border-none cursor-pointer disabled:opacity-40"
               :style="{ background: 'var(--color-accent)', color: '#fff' }"
             >
@@ -300,11 +301,8 @@ function backToStart() {
         <h2 class="text-lg font-semibold mb-2" :style="{ color: 'var(--color-text-primary)' }">
           请备份你的助记词
         </h2>
-        <p
-          class="text-xs mb-5"
-          :style="{ color: 'var(--color-text-secondary)' }"
-          v-html="'这 12 个单词是恢复密码库的 <strong>唯一方式</strong>。<br />请抄写下来或保存在安全的地方，<strong>不要截屏</strong>。'"
-        />
+        <p class="text-xs mb-5" :style="{ color: 'var(--color-text-secondary)' }"
+          v-html="'这 12 个单词是恢复密码库的 <strong>唯一方式</strong>。<br />请抄写下来或保存在安全的地方，<strong>不要截屏</strong>。'" />
         <div
           class="rounded-lg p-4 mb-6 text-left"
           :style="{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }"
@@ -324,7 +322,6 @@ function backToStart() {
           </div>
         </div>
 
-        <!-- Save to txt button -->
         <button
           @click="handleSaveTxt"
           class="w-full py-2 rounded-lg text-xs font-medium border cursor-pointer transition-colors duration-100 mb-3"

@@ -47,6 +47,13 @@ router.beforeEach(async (to, _from, next) => {
       next({ name: 'onboarding' })
       return
     }
+    // Check if vault file exists on disk
+    const hasFile = await vault.vaultExists()
+    if (!hasFile) {
+      // Has mnemonic but no vault file — redirect to onboarding for import
+      next({ name: 'onboarding' })
+      return
+    }
   }
   next()
 })

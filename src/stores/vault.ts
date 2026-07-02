@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { writeText } from '@tauri-apps/plugin-clipboard-manager'
+import { save, open } from '@tauri-apps/plugin-dialog'
 
 export interface MnemonicResult {
   phrase: string
@@ -134,11 +135,28 @@ export const useVaultStore = defineStore('vault', () => {
   }
 
   async function exportBackup(): Promise<string> {
-    return await invoke<string>('export_vault', { seedHex: seedHex.value })
+    // Read raw encrypted data
+    const raw = await invoke<number[]>('read_vault_raw')
+    const data = new Uint8Array(raw)
+    // Ask where to save
+    const dest = await save({
+      filters: [{ name: '加密密码库', extensions: ['12words'] }],
+      defaultPath: 'vault_export.12words',
+    })
+    if (!dest) throw '用户取消了导出'
+    return await invoke<string>('export_vault', { destPath: dest, encryptedData: Array.from(data) })
   }
 
   async function importBackup(): Promise<VaultEntry[]> {
-    const result = await invoke<VaultEntry[]>('import_vault', { seedHex: seedHex.value })
+    const file = await open({
+      filters: [{ name: '加密密码库', extensions: ['12words'] }],
+      multiple: false,
+    })
+    if (!file) throw '用户取消了导入'
+    const result = await invoke<VaultEntry[]>('import_vault_from', {
+      sourcePath: file,
+      seedHex: seedHex.value,
+    })
     entries.value = result
     return result
   }
