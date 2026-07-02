@@ -9,8 +9,8 @@
 `12Words` 是一款专为极客、Web3 爱好者及隐私至上者打造的**纯本地、零信任、去中心化**的数字资产与密码安全保险箱。我们坚信：**您的身家性命，不应托付给任何人的服务器。**
 
 ### 📸 软件截图
-![12Words 主界面](./screenshots/main.png)
-![12Words 密码生成器](./screenshots/generator.png)
+![12Words 主界面](./screenshots/UI1.png)
+![12Words 功能界面](./screenshots/mian.png)
 
 ### ✨ 核心特性
 *   **🔑 助记词主锁：** 引入 Web3 级别的 12 个助记词（BIP39 算法）作为唯一的身份凭证与解密钥匙。告别传统易被暴力破解的弱密码。
@@ -37,7 +37,7 @@
 
 ### 📸 Screenshots
 ![12Words Main UI](./screenshots/main.png)
-![12Words Generator UI](./screenshots/generator.png)
+![12Words UI](./screenshots/UI2.png)
 
 ### ✨ Key Features
 *   **🔑 Mnemonic Master Lock:** Uses Web3-standard 12-word seed phrases (BIP39) as the sole identity credential and decryption key. Say goodbye to easily brute-forced traditional passwords.
