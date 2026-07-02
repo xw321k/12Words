@@ -99,11 +99,11 @@ fn write_vault(app_handle: tauri::AppHandle, seed_hex: String, entries: Vec<cryp
     Ok(())
 }
 
-/// Get vault file path in app data dir
-fn vault_path(app_handle: &tauri::AppHandle) -> PathBuf {
-    let dir = app_handle.path().app_data_dir()
-        .expect("无法获取应用数据目录");
-    dir.join("vault.encrypted")
+/// Get vault file path — use app exe directory so it's portable with the exe
+fn vault_path(_app_handle: &tauri::AppHandle) -> PathBuf {
+    let exe = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("."));
+    let parent = exe.parent().unwrap_or(&PathBuf::from(".")).to_path_buf();
+    parent.join("vault.encrypted")
 }
 
 /// Open a URL in the system browser
