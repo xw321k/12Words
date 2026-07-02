@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useVaultStore } from '../stores/vault'
 
+const router = useRouter()
 const vault = useVaultStore()
 
 // Steps: 'generate' → 'verify' → 'done'
@@ -81,7 +83,7 @@ function handleStartOver() {
 }
 
 function handleDone() {
-  // Router will redirect to main view
+  router.push('/passwords')
 }
 </script>
 
