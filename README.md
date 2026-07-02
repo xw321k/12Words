@@ -36,7 +36,7 @@
 `12Words` is a **100% local, zero-knowledge, and decentralized** digital asset and password vault built for geeks, Web3 enthusiasts, and privacy purists. We believe that **your most sensitive data should never be trusted to anyone else's server.**
 
 ### 📸 Screenshots
-![12Words Main UI](./screenshots/main.png)
+![12Words Main UI](./screenshots/generator.png)
 ![12Words UI](./screenshots/UI2.png)
 
 ### ✨ Key Features
