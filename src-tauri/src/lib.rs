@@ -106,6 +106,80 @@ fn vault_path(app_handle: &tauri::AppHandle) -> PathBuf {
     dir.join("vault.encrypted")
 }
 
+/// Open a URL in the system browser
+#[tauri::command]
+fn open_url(url: String) -> Result<(), String> {
+    std::process::Command::new("cmd")
+        .args(["/c", "start", "", &url])
+        .spawn()
+        .map_err(|e| format!("打开链接失败: {}", e))?;
+    Ok(())
+}
+
+/// Export vault file to a user-chosen location
+#[tauri::command]
+fn export_vault(app_handle: tauri::AppHandle, seed_hex: String) -> Result<String, String> {
+    use tauri_plugin_dialog::DialogExt;
+
+    let source = vault_path(&app_handle);
+    if !source.exists() {
+        return Err("密码库文件不存在，请先添加密码数据".to_string());
+    }
+
+    // Re-encrypt to ensure the file is fresh
+    let encrypted = std::fs::read(&source)
+        .map_err(|e| format!("读取密码库失败: {}", e))?;
+    let data = crypto::VaultData::from_encrypted(&seed_hex, &encrypted)?;
+    let re_encrypted = data.to_encrypted(&seed_hex)?;
+
+    let dest = app_handle.dialog()
+        .file()
+        .add_filter("加密密码库", &["12words"])
+        .set_file_name("vault_export.12words")
+        .blocking_save_file();
+
+    match dest {
+        Some(path) => {
+            let p = path.into_path().map_err(|e| format!("路径错误: {}", e))?;
+            std::fs::write(&p, &re_encrypted)
+                .map_err(|e| format!("导出失败: {}", e))?;
+            Ok("导出成功".to_string())
+        }
+        None => Err("用户取消了导出".to_string()),
+    }
+}
+
+/// Import vault file from a user-chosen location
+#[tauri::command]
+fn import_vault(app_handle: tauri::AppHandle, seed_hex: String) -> Result<Vec<crypto::VaultEntry>, String> {
+    use tauri_plugin_dialog::DialogExt;
+
+    let file = app_handle.dialog()
+        .file()
+        .add_filter("加密密码库", &["12words"])
+        .blocking_pick_file();
+
+    match file {
+        Some(path) => {
+            let p = path.into_path().map_err(|e| format!("路径错误: {}", e))?;
+            let encrypted = std::fs::read(&p)
+                .map_err(|e| format!("读取备份文件失败: {}", e))?;
+            let data = crypto::VaultData::from_encrypted(&seed_hex, &encrypted)?;
+
+            // Write to app data dir
+            let dest = vault_path(&app_handle);
+            if let Some(parent) = dest.parent() {
+                std::fs::create_dir_all(parent)
+                    .map_err(|e| format!("创建目录失败: {}", e))?;
+            }
+            std::fs::write(&dest, &encrypted)
+                .map_err(|e| format!("写入密码库失败: {}", e))?;
+            Ok(data.entries)
+        }
+        None => Err("用户取消了导入".to_string()),
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -125,6 +199,9 @@ pub fn run() {
             validate_mnemonic,
             import_mnemonic,
             generate_password,
+            open_url,
+            export_vault,
+            import_vault,
             read_vault,
             write_vault,
         ])

@@ -72,9 +72,14 @@ export const useVaultStore = defineStore('vault', () => {
   async function generate() {
     const result = await invoke<MnemonicResult>('generate_mnemonic')
     mnemonic.value = result
-    localStorage.setItem('vault_mnemonic', JSON.stringify(result))
-    isInitialized.value = true
+    // NOT persisted yet — wait for confirmation
     return result
+  }
+
+  function confirmMnemonic() {
+    if (!mnemonic.value) return
+    localStorage.setItem('vault_mnemonic', JSON.stringify(mnemonic.value))
+    isInitialized.value = true
   }
 
   async function importPhrase(phrase: string) {
@@ -128,11 +133,21 @@ export const useVaultStore = defineStore('vault', () => {
     return await invoke<string>('generate_password', { length, useNumbers: numbers, useSymbols: symbols })
   }
 
+  async function exportBackup(): Promise<string> {
+    return await invoke<string>('export_vault', { seedHex: seedHex.value })
+  }
+
+  async function importBackup(): Promise<VaultEntry[]> {
+    const result = await invoke<VaultEntry[]>('import_vault', { seedHex: seedHex.value })
+    entries.value = result
+    return result
+  }
+
   return {
     mnemonic, isInitialized, entries, clipboardTimer,
     phrase, words, seedHex, userId, entryCount,
-    initialize, generate, importPhrase, lock,
+    initialize, generate, confirmMnemonic, importPhrase, lock,
     loadEntries, saveEntries, addEntry, updateEntry, deleteEntry,
-    generatePassword, copyToClipboard,
+    generatePassword, copyToClipboard, exportBackup, importBackup,
   }
 })

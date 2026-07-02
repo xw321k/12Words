@@ -9,6 +9,9 @@
     "core:default",
     "clipboard-manager:default",
     "clipboard-manager:allow-write-text",
-    "clipboard-manager:allow-read-text"
+    "clipboard-manager:allow-read-text",
+    "dialog:default",
+    "dialog:allow-save",
+    "dialog:allow-open"
   ]
 }
