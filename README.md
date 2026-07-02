@@ -9,9 +9,8 @@
 `12Words` 是一款专为极客、Web3 爱好者及隐私至上者打造的**纯本地、零信任、去中心化**的数字资产与密码安全保险箱。我们坚信：**您的身家性命，不应托付给任何人的服务器。**
 
 ### 📸 软件截图
-> *提示：将你通过方法 A 拿到的图片链接，替换掉下方的 `你的图片链接`*
-![12Words 主界面](你的图片链接1_主界面)
-![12Words 密码生成器](你的图片链接2_生成器)
+![12Words 主界面](./screenshots/main.png)
+![12Words 密码生成器](./screenshots/generator.png)
 
 ### ✨ 核心特性
 *   **🔑 助记词主锁：** 引入 Web3 级别的 12 个助记词（BIP39 算法）作为唯一的身份凭证与解密钥匙。告别传统易被暴力破解的弱密码。
@@ -22,9 +21,13 @@
 *   **💾 100% 掌控的冷备份：** 支持一键导出/导入加密库（`vault.encrypted`），通过 U 盘或个人网盘实现绝对安全的跨设备数据迁移。
 
 ### 🚀 快速开始
-1. 前往本仓库 [Releases](https://github.com/xw321k/12Words/releases) 页面（或前往闲鱼官方渠道）下载最新版 Windows 安装包（`.msi`）。
-2. 打开软件，生成属于你的 12 个助记词（**请务必物理抄写备份！**）。
+1. 前往本仓库的 [Releases](https://github.com/xw321k/12words/releases) 页面，下载最新的 Windows 安装包：`12Words_0.1.0_x64_en-US.msi`。
+2. 双击安装并打开软件，生成属于你的 12 个助记词（**请务必物理抄写备份！**）。
 3. 开始安全地存放你的数字资产。
+
+## 🤝 欢迎贡献 / Contributing
+
+本项目完全开源，目前仍处于早期阶段。如果你有任何想法、发现了 Bug、或者想为 `12Words` 增加新功能（例如：更多本地小工具、跨平台适配等），非常欢迎提交 **Issue** 或直接发起 **Pull Request (PR)**！让我们一起把这个纯本地的数字资产保险箱变得更完美。
 
 ---
 
@@ -33,7 +36,8 @@
 `12Words` is a **100% local, zero-knowledge, and decentralized** digital asset and password vault built for geeks, Web3 enthusiasts, and privacy purists. We believe that **your most sensitive data should never be trusted to anyone else's server.**
 
 ### 📸 Screenshots
-![12Words Main UI](你的图片链接1_主界面)
+![12Words Main UI](./screenshots/main.png)
+![12Words Generator UI](./screenshots/generator.png)
 
 ### ✨ Key Features
 *   **🔑 Mnemonic Master Lock:** Uses Web3-standard 12-word seed phrases (BIP39) as the sole identity credential and decryption key. Say goodbye to easily brute-forced traditional passwords.
@@ -44,8 +48,8 @@
 *   **💾 Sovereign Cold Backup:** Export/import your encrypted vault (`vault.encrypted`) with one click to transfer data securely via USB or private drives.
 
 ### 🚀 Quick Start
-1. Go to the [Releases](https://github.com/xw321k/12Words/releases) page to check out our release info (Or purchase via our official Xianyu channel).
-2. Run the application and generate your unique 12 words (**Make sure to write them down on paper!**).
+1. Go to the [Releases](https://github.com/xw321k/12words/releases) page of this repository and download the latest Windows installer: `12Words_0.1.0_x64_en-US.msi`.
+2. Run the installer, launch the application, and generate your unique 12 words (**Make sure to write them down on paper!**).
 3. Start safeguarding your digital assets with absolute peace of mind.
 
 ---
@@ -57,3 +61,10 @@
 
 ## 📄 License
 This project is open-source under the [GPL-3.0 License](LICENSE).
+
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**:
+1.  Fork the Project
+2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4.  Push to the Branch (`git push origin feature/AmazingFeature`)
+5.  Open a Pull Request
