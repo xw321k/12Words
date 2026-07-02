@@ -10,7 +10,7 @@
 
 ### 📸 软件截图
 ![12Words 主界面](./screenshots/UI1.png)
-![12Words 功能界面](./screenshots/mian.png)
+![12Words 功能界面](./screenshots/main.png)
 
 ### ✨ 核心特性
 *   **🔑 助记词主锁：** 引入 Web3 级别的 12 个助记词（BIP39 算法）作为唯一的身份凭证与解密钥匙。告别传统易被暴力破解的弱密码。
