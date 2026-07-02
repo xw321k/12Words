@@ -11,7 +11,7 @@ const searchQuery = ref('')
 const showAddDialog = ref(false)
 const editingEntry = ref<VaultEntry | null>(null)
 const copiedId = ref<string | null>(null)
-const copiedField = ref<'username' | 'password' | null>(null)
+const copiedField = ref<string | null>(null)
 const toastMsg = ref('')
 const toastTimer = ref<ReturnType<typeof setTimeout> | null>(null)
 const visiblePwdIds = ref<Set<string>>(new Set())
@@ -247,13 +247,18 @@ async function handleDelete(id: string) {
   showToast(t('passwords.deleted'))
 }
 
-async function handleCopy(text: string, id: string, field: 'username' | 'password') {
+async function handleCopy(text: string, id: string, label: string, category: string = '') {
   await vault.copyToClipboard(text)
   copiedId.value = id
-  copiedField.value = field
-  showToast(t('passwords.copied'))
+  copiedField.value = label
+  // 精准提示: 邮箱密码已复制 / 邮箱账号已复制 / 密码已复制 / 用户名已复制
+  let display = label
+  if (category === 'Email' && label === '密码') {
+    display = `${catLabel(category)}${label}`
+  }
+  showToast(`${display} ${loc.locale === 'zh' ? '已复制' : 'copied'}`)
   setTimeout(() => {
-    if (copiedId.value === id && copiedField.value === field) {
+    if (copiedId.value === id && copiedField.value === label) {
       copiedId.value = null
       copiedField.value = null
     }
@@ -326,7 +331,7 @@ function formatDate(iso: string): string {
               <div v-for="(v, i) in categoryDisplayVals(entry)" :key="i"
                 class="flex items-center gap-2 py-0.5 px-2 -mx-2 rounded group"
                 :class="{ 'cursor-pointer': !v.isUrl }"
-                @click="v.isUrl ? null : isSecretField(v.label) ? null : handleCopy(v.value, entry.id, 'password')">
+                @click="v.isUrl ? null : handleCopy(v.value, entry.id, v.label, entry.category)">
                 <span class="text-[11px] w-16 flex-shrink-0" :style="{ color: 'var(--color-text-tertiary)' }">{{ v.label }}</span>
                 <span v-if="v.isUrl" class="text-xs truncate cursor-pointer underline decoration-dotted underline-offset-2"
                   :style="{ color: 'var(--color-accent)' }"
