@@ -1,13 +1,20 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useVaultStore } from '../stores/vault'
+import { useLocaleStore } from '../stores/locale'
+import { messages } from '../i18n'
 
 const vault = useVaultStore()
+const loc = useLocaleStore()
 const length = ref(20)
 const useNumbers = ref(true)
 const useSymbols = ref(true)
 const generated = ref('')
 const copied = ref(false)
+
+function t(key: string): string {
+  return messages[loc.locale]?.[key] || key
+}
 
 function handleGenerate() {
   vault.generatePassword(length.value, useNumbers.value, useSymbols.value)
@@ -24,13 +31,12 @@ function handleCopy() {
 
 <template>
   <div class="flex-1 flex flex-col overflow-hidden" :style="{ background: 'var(--color-surface-secondary)' }">
-    <!-- Header -->
     <div
       class="h-14 flex items-center px-6 border-b flex-shrink-0"
       :style="{ borderColor: 'var(--color-border)', background: 'var(--color-surface)' }"
     >
       <h1 class="text-sm font-semibold" :style="{ color: 'var(--color-text-primary)' }">
-        密码生成器
+        {{ t('generator.title') }}
       </h1>
     </div>
 
@@ -39,7 +45,6 @@ function handleCopy() {
         class="max-w-md mx-auto rounded-xl p-6"
         :style="{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }"
       >
-        <!-- Generated password display -->
         <div
           class="mb-6 p-3 rounded-lg text-center font-mono text-lg break-all select-all min-h-[48px] flex items-center justify-center"
           :style="{
@@ -48,21 +53,27 @@ function handleCopy() {
             color: generated ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
           }"
         >
-          {{ generated || '点击生成' }}
+          {{ generated || t('generator.placeholder') }}
         </div>
 
-        <!-- Length slider -->
         <div class="mb-5">
           <div class="flex justify-between items-center mb-2">
-            <span class="text-xs" :style="{ color: 'var(--color-text-secondary)' }">长度</span>
-            <span class="text-xs font-mono" :style="{ color: 'var(--color-text-primary)' }">{{ length }}</span>
+            <span class="text-xs" :style="{ color: 'var(--color-text-secondary)' }">{{ t('generator.length') }}</span>
+            <input v-model.number="length" type="number" min="4" max="128" step="1"
+              class="w-16 text-center text-xs font-mono outline-none rounded-md px-2 py-0.5"
+              :style="{
+                background: 'var(--color-surface-secondary)',
+                border: '1px solid var(--color-border)',
+                color: 'var(--color-text-primary)',
+              }" />
           </div>
           <input
             v-model.number="length"
             type="range"
             min="4"
             max="128"
-            class="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+            step="1"
+            class="w-full h-2 rounded-full appearance-none cursor-pointer"
             :style="{
               background: 'var(--color-surface-tertiary)',
               accentColor: 'var(--color-accent)',
@@ -74,7 +85,6 @@ function handleCopy() {
           </div>
         </div>
 
-        <!-- Options -->
         <div class="space-y-3 mb-6">
           <label class="flex items-center gap-3 cursor-pointer">
             <input
@@ -83,7 +93,7 @@ function handleCopy() {
               class="w-3.5 h-3.5 rounded cursor-pointer"
               :style="{ accentColor: 'var(--color-accent)' }"
             />
-            <span class="text-xs" :style="{ color: 'var(--color-text-primary)' }">包含数字 (0-9)</span>
+            <span class="text-xs" :style="{ color: 'var(--color-text-primary)' }">{{ t('generator.numbers') }}</span>
           </label>
           <label class="flex items-center gap-3 cursor-pointer">
             <input
@@ -92,11 +102,10 @@ function handleCopy() {
               class="w-3.5 h-3.5 rounded cursor-pointer"
               :style="{ accentColor: 'var(--color-accent)' }"
             />
-            <span class="text-xs" :style="{ color: 'var(--color-text-primary)' }">包含符号 (!@#$%...)</span>
+            <span class="text-xs" :style="{ color: 'var(--color-text-primary)' }">{{ t('generator.symbols') }}</span>
           </label>
         </div>
 
-        <!-- Buttons -->
         <div class="flex gap-2">
           <button
             @click="handleGenerate"
@@ -105,7 +114,7 @@ function handleCopy() {
             @mouseenter="(e) => (e.currentTarget as HTMLElement).style.background = 'var(--color-accent-hover)'"
             @mouseleave="(e) => (e.currentTarget as HTMLElement).style.background = 'var(--color-accent)'"
           >
-            生成
+            {{ t('generator.generate') }}
           </button>
           <button
             @click="handleCopy"
@@ -119,7 +128,7 @@ function handleCopy() {
             @mouseenter="(e) => { if (!copied) (e.currentTarget as HTMLElement).style.background = 'var(--color-surface-tertiary)' }"
             @mouseleave="(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }"
           >
-            {{ copied ? '已复制 ✓' : '复制到剪贴板' }}
+            {{ copied ? t('generator.copied') : t('generator.copy') }}
           </button>
         </div>
       </div>

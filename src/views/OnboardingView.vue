@@ -2,9 +2,12 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useVaultStore } from '../stores/vault'
+import { useLocaleStore } from '../stores/locale'
+import { messages } from '../i18n'
 
 const router = useRouter()
 const vault = useVaultStore()
+const loc = useLocaleStore()
 
 type Step = 'generate' | 'show' | 'verify' | 'done'
 const step = ref<Step>('generate')
@@ -23,6 +26,13 @@ const userChoices = ref<string[]>([])
 const verifyError = ref(false)
 const isImport = ref(false)
 const savedTxtPath = ref('')
+
+function t(key: string, params?: Record<string, string | number>): string {
+  const msg = messages[loc.locale]?.[key]
+  if (!msg) return key
+  if (!params) return msg
+  return msg.replace(/\{(\w+)\}/g, (_, k) => String(params[k] ?? ''))
+}
 
 function shuffle(arr: string[]): string[] {
   const a = [...arr]
@@ -177,16 +187,32 @@ function backToStart() {
     class="h-screen w-screen flex items-center justify-center"
     :style="{ background: 'var(--color-surface-secondary)' }"
   >
+    <!-- Language switcher -->
+    <div class="fixed top-4 right-4 flex gap-1.5 z-10">
+      <button @click="loc.setLocale('zh')"
+        class="px-2 py-1 rounded text-[10px] font-medium border cursor-pointer transition-colors"
+        :style="{
+          borderColor: loc.locale === 'zh' ? 'var(--color-accent)' : 'var(--color-border)',
+          color: loc.locale === 'zh' ? 'var(--color-accent)' : 'var(--color-text-tertiary)',
+          background: loc.locale === 'zh' ? 'color-mix(in srgb, var(--color-accent) 10%, transparent)' : 'transparent',
+        }">中文</button>
+      <button @click="loc.setLocale('en')"
+        class="px-2 py-1 rounded text-[10px] font-medium border cursor-pointer transition-colors"
+        :style="{
+          borderColor: loc.locale === 'en' ? 'var(--color-accent)' : 'var(--color-border)',
+          color: loc.locale === 'en' ? 'var(--color-accent)' : 'var(--color-text-tertiary)',
+          background: loc.locale === 'en' ? 'color-mix(in srgb, var(--color-accent) 10%, transparent)' : 'transparent',
+        }">EN</button>
+    </div>
     <div class="w-full max-w-lg mx-6">
       <!-- ========== Main Page ========== -->
       <div v-if="step === 'generate'" class="text-center">
         <div class="text-4xl mb-4">🔐</div>
         <h1 class="text-xl font-semibold mb-2" :style="{ color: 'var(--color-text-primary)' }">
-          欢迎使用 12Words
+          {{ t('onboarding.welcome') }}
         </h1>
-        <p class="text-sm mb-8" :style="{ color: 'var(--color-text-secondary)' }">
-          12 位助记词是你访问密码库的<strong>唯一钥匙</strong>
-        </p>
+        <p class="text-sm mb-8" :style="{ color: 'var(--color-text-secondary)' }"
+          v-html="t('onboarding.desc')" />
         <div v-if="error" class="mb-4 text-xs" :style="{ color: 'var(--color-danger)' }">{{ error }}</div>
 
         <button
@@ -197,12 +223,12 @@ function backToStart() {
           @mouseenter="(e) => { if (!loading) (e.currentTarget as HTMLElement).style.background = 'var(--color-accent-hover)' }"
           @mouseleave="(e) => { if (!loading) (e.currentTarget as HTMLElement).style.background = 'var(--color-accent)' }"
         >
-          {{ loading ? '处理中...' : '生成新助记词' }}
+          {{ loading ? t('onboarding.processing') : t('onboarding.generate') }}
         </button>
 
         <div class="flex items-center gap-3 my-5">
           <div class="flex-1 h-px" :style="{ background: 'var(--color-border)' }" />
-          <span class="text-xs" :style="{ color: 'var(--color-text-tertiary)' }">或者</span>
+          <span class="text-xs" :style="{ color: 'var(--color-text-tertiary)' }">{{ t('onboarding.or') }}</span>
           <div class="flex-1 h-px" :style="{ background: 'var(--color-border)' }" />
         </div>
 
@@ -215,7 +241,7 @@ function backToStart() {
             @mouseenter="(e) => { if (!loading) (e.currentTarget as HTMLElement).style.background = 'var(--color-surface-tertiary)' }"
             @mouseleave="(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }"
           >
-            验证已有助记词
+            {{ t('onboarding.import') }}
           </button>
 
           <!-- 12Words 提示 -->
@@ -226,13 +252,13 @@ function backToStart() {
             <div class="flex items-start gap-2">
               <span class="text-sm flex-shrink-0 mt-0.5">🛡️</span>
               <div class="text-[11px] space-y-1.5" :style="{ color: 'var(--color-text-secondary)' }">
-                <p class="font-semibold" :style="{ color: 'var(--color-text-primary)' }">12Words 提示</p>
-                <p>本软件为 100% 纯本地零信任架构，我们不设服务器，绝不上传您的任何隐私。</p>
-                <p class="font-medium" :style="{ color: 'var(--color-text-primary)' }">注意：12 个助记词是解密您密码箱的唯一钥匙，而本地加密文件（vault.encrypted）是您数据的唯一载体。二者缺一不可。</p>
-                <p>建议您：</p>
+                <p class="font-semibold" :style="{ color: 'var(--color-text-primary)' }">{{ t('onboarding.tipTitle') }}</p>
+                <p>{{ t('onboarding.tipLine1') }}</p>
+                <p class="font-medium" :style="{ color: 'var(--color-text-primary)' }">{{ t('onboarding.tipLine2') }}</p>
+                <p>{{ t('onboarding.tipLine3') }}</p>
                 <ul class="list-disc pl-4">
-                  <li>抄写并妥善保管好这 12 个助记词。</li>
-                  <li>定期使用设置页的一键备份功能，将加密文件导出至您的 U 盘或私人云盘中。</li>
+                  <li>{{ t('onboarding.tipItem1') }}</li>
+                  <li>{{ t('onboarding.tipItem2') }}</li>
                 </ul>
               </div>
             </div>
@@ -242,12 +268,12 @@ function backToStart() {
         <!-- Import: textarea -->
         <div v-else class="text-left">
           <p class="text-xs mb-3 text-center" :style="{ color: 'var(--color-text-secondary)' }">
-            输入 12 个助记词，用空格分隔（支持直接粘贴整段）
+            {{ t('onboarding.importTitle') }}
           </p>
           <textarea
             v-model="wordInputs[0]"
             @input="onImportPaste"
-            placeholder="在此粘贴或输入 12 个助记词..."
+            :placeholder="t('onboarding.importPlaceholder')"
             rows="4"
             class="w-full px-3 py-2 rounded-lg text-xs outline-none resize-none transition-colors duration-100"
             :style="{
@@ -266,7 +292,7 @@ function backToStart() {
               class="flex-1 py-2 rounded-lg text-xs border cursor-pointer"
               :style="{ borderColor: 'var(--color-border)', color: 'var(--color-text-tertiary)', background: 'transparent' }"
             >
-              取消
+              {{ t('onboarding.cancel') }}
             </button>
             <button
               @click="handleImport"
@@ -274,7 +300,7 @@ function backToStart() {
               class="flex-1 py-2 rounded-lg text-xs font-medium border-none cursor-pointer disabled:opacity-40"
               :style="{ background: 'var(--color-accent)', color: '#fff' }"
             >
-              {{ loading ? '验证中...' : '验证并恢复' }}
+              {{ loading ? t('onboarding.verifying') : t('onboarding.importBtn') }}
             </button>
           </div>
         </div>
@@ -289,14 +315,14 @@ function backToStart() {
           @mouseenter="(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text-secondary)' }"
           @mouseleave="(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text-tertiary)' }"
         >
-          ← 返回
+          ← {{ t('onboarding.back') }}
         </button>
         <div class="text-4xl mb-4">📝</div>
         <h2 class="text-lg font-semibold mb-2" :style="{ color: 'var(--color-text-primary)' }">
-          请备份你的助记词
+          {{ t('onboarding.backupTitle') }}
         </h2>
         <p class="text-xs mb-5" :style="{ color: 'var(--color-text-secondary)' }"
-          v-html="'这 12 个单词是恢复密码库的 <strong>唯一方式</strong>。<br />请抄写下来或保存在安全的地方，<strong>不要截屏</strong>。'" />
+          v-html="t('onboarding.backupDesc')" />
         <div
           class="rounded-lg p-4 mb-6 text-left"
           :style="{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }"
@@ -323,10 +349,10 @@ function backToStart() {
           @mouseenter="(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-surface-tertiary)' }"
           @mouseleave="(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }"
         >
-          💾 保存到 txt 文件
+          {{ t('onboarding.saveTxt') }}
         </button>
         <p v-if="savedTxtPath" class="text-xs mb-3" :style="{ color: 'var(--color-success)' }">
-          已保存至: {{ savedTxtPath }}
+          {{ t('onboarding.savedTxt', { path: savedTxtPath }) }}
         </p>
 
         <button
@@ -336,7 +362,7 @@ function backToStart() {
           @mouseenter="(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-accent-hover)' }"
           @mouseleave="(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-accent)' }"
         >
-          我已备份，开始验证
+          {{ t('onboarding.startVerify') }}
         </button>
       </div>
 
@@ -349,15 +375,14 @@ function backToStart() {
           @mouseenter="(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text-secondary)' }"
           @mouseleave="(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text-tertiary)' }"
         >
-          ← 返回
+          ← {{ t('onboarding.back') }}
         </button>
 
         <h2 class="text-lg font-semibold mb-1 text-center" :style="{ color: 'var(--color-text-primary)' }">
-          验证你的助记词
+          {{ t('onboarding.verifyTitle') }}
         </h2>
-        <p class="text-xs mb-4 text-center" :style="{ color: 'var(--color-text-secondary)' }">
-          从下方选项中选出第 <strong>{{ verifyIndex + 1 }}</strong> 个单词
-        </p>
+        <p class="text-xs mb-4 text-center" :style="{ color: 'var(--color-text-secondary)' }"
+          v-html="t('onboarding.verifyStep', { index: verifyIndex + 1 })" />
 
         <div class="h-1 rounded-full mb-4" :style="{ background: 'var(--color-surface-tertiary)' }">
           <div
@@ -413,12 +438,12 @@ function backToStart() {
             @mouseenter="(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-accent-hover)' }"
             @mouseleave="(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-accent)' }"
           >
-            验证全部 12 个单词
+            {{ t('onboarding.verifySubmit') }}
           </button>
         </div>
 
         <p v-if="verifyError" class="text-xs text-center" :style="{ color: 'var(--color-danger)' }">
-          顺序不对，请仔细回想你的助记词后重新选择！
+          {{ t('onboarding.verifyError') }}
         </p>
       </div>
 
@@ -426,18 +451,16 @@ function backToStart() {
       <div v-else-if="step === 'done'" class="text-center">
         <div class="text-4xl mb-4">✅</div>
         <h2 class="text-lg font-semibold mb-2" :style="{ color: 'var(--color-text-primary)' }">
-          助记词已验证！
+          {{ t('onboarding.verifiedTitle') }}
         </h2>
-        <p class="text-xs mb-6" :style="{ color: 'var(--color-text-secondary)' }">
-          请务必将你的 12 个助记词保存在安全的地方。<br />
-          这是恢复密码库的 <strong>唯一方式</strong>，丢失后无法找回。
-        </p>
+        <p class="text-xs mb-6" :style="{ color: 'var(--color-text-secondary)' }"
+          v-html="t('onboarding.verifiedDesc')" />
         <div
           class="rounded-lg p-4 mb-6 text-left"
           :style="{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }"
         >
           <div class="text-xs font-semibold mb-2" :style="{ color: 'var(--color-text-secondary)' }">
-            你的 12 位助记词
+            {{ t('onboarding.wordsTitle') }}
           </div>
           <div class="flex flex-wrap gap-1.5">
             <span
@@ -458,7 +481,7 @@ function backToStart() {
           @mouseenter="(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-accent-hover)' }"
           @mouseleave="(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-accent)' }"
         >
-          进入密码库
+          {{ t('onboarding.enterVault') }}
         </button>
       </div>
     </div>

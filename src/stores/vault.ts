@@ -37,6 +37,7 @@ export const useVaultStore = defineStore('vault', () => {
   const entries = ref<VaultEntry[]>([])
   const clipboardTimer = ref<ReturnType<typeof setTimeout> | null>(null)
   const filterCategory = ref('')
+  const isFromStorage = ref(false)
 
   // -- Computed --
   const phrase = computed(() => mnemonic.value?.phrase ?? '')
@@ -65,6 +66,7 @@ export const useVaultStore = defineStore('vault', () => {
         const parsed = JSON.parse(saved) as MnemonicResult
         mnemonic.value = parsed
         isInitialized.value = true
+        isFromStorage.value = true
         return
       } catch {
         localStorage.removeItem('vault_mnemonic')
@@ -174,7 +176,7 @@ export const useVaultStore = defineStore('vault', () => {
 
   return {
     mnemonic, isInitialized, entries, clipboardTimer,
-    phrase, words, seedHex, userId, entryCount, filterCategory,
+    phrase, words, seedHex, userId, entryCount, filterCategory, isFromStorage,
     initialize, generate, confirmMnemonic, importPhrase, lock,
     loadEntries, saveEntries, addEntry, updateEntry, deleteEntry,
     generatePassword, copyToClipboard, exportBackup, importBackup, saveMnemonicTxt, vaultExists,
