@@ -14,13 +14,14 @@ const seedInfo = ref('')
 
 // Import mode
 const importPhrase = ref('')
-const importMode = ref(false)
+const showImportInput = ref(false)
 
 // Verification
 const verifyIndex = ref(0)
 const currentOptions = ref<string[]>([])
 const userChoices = ref<string[]>([])
 const verifyError = ref(false)
+const isImport = ref(false)
 
 function shuffle(arr: string[]): string[] {
   const a = [...arr]
@@ -62,12 +63,18 @@ async function handleGenerate() {
   try {
     await vault.generate()
     seedInfo.value = `Seed: ${vault.userId.slice(0, 16)}...`
+    isImport.value = false
     step.value = 'show'
   } catch (e: any) {
     error.value = String(e)
   } finally {
     loading.value = false
   }
+}
+
+function showImport() {
+  showImportInput.value = true
+  error.value = ''
 }
 
 async function handleImport() {
@@ -82,8 +89,14 @@ async function handleImport() {
   try {
     await vault.importPhrase(phrase)
     seedInfo.value = `Seed: ${vault.userId.slice(0, 16)}...`
-    importMode.value = true
-    step.value = 'show'
+    isImport.value = true
+    showImportInput.value = false
+    // Skip show step, go straight to verify
+    userChoices.value = new Array(12).fill('')
+    verifyIndex.value = 0
+    verifyError.value = false
+    currentOptions.value = generateOptions(vault.words[0])
+    step.value = 'verify'
   } catch (e: any) {
     error.value = '无效的助记词，请检查拼写'
   } finally {
@@ -128,7 +141,8 @@ function handleDone() {
 function backToStart() {
   step.value = 'generate'
   importPhrase.value = ''
-  importMode.value = false
+  showImportInput.value = false
+  isImport.value = false
   error.value = ''
 }
 </script>
@@ -146,7 +160,7 @@ function backToStart() {
           欢迎使用 12Words
         </h1>
         <p class="text-sm mb-8" :style="{ color: 'var(--color-text-secondary)' }">
-          这是访问你密码库的 <strong>唯一钥匙</strong>
+          12 位助记词是你访问密码库的<strong>唯一钥匙</strong>
         </p>
         <div v-if="error" class="mb-4 text-xs" :style="{ color: 'var(--color-danger)' }">{{ error }}</div>
 
@@ -168,11 +182,21 @@ function backToStart() {
           <div class="flex-1 h-px" :style="{ background: 'var(--color-border)' }" />
         </div>
 
-        <!-- Import existing -->
-        <div class="text-left">
-          <label class="block text-xs mb-2 text-center" :style="{ color: 'var(--color-text-secondary)' }">
-            导入已有助记词
-          </label>
+        <!-- Verify existing mnemonic -->
+        <button
+          v-if="!showImportInput"
+          @click="showImport"
+          :disabled="loading"
+          class="w-full py-2.5 rounded-lg text-sm font-medium border cursor-pointer transition-colors duration-100"
+          :style="{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)', background: 'transparent' }"
+          @mouseenter="(e) => { if (!loading) (e.currentTarget as HTMLElement).style.background = 'var(--color-surface-tertiary)' }"
+          @mouseleave="(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }"
+        >
+          验证已有助记词
+        </button>
+
+        <!-- Import textarea (appears after clicking verify existing) -->
+        <div v-else class="text-left">
           <textarea
             v-model="importPhrase"
             placeholder="在此粘贴 12 个助记词，用空格分隔..."
@@ -184,20 +208,23 @@ function backToStart() {
               color: 'var(--color-text-primary)',
             }"
           />
-          <button
-            @click="handleImport"
-            :disabled="loading || !importPhrase.trim()"
-            class="w-full py-2 rounded-lg text-xs font-medium border cursor-pointer transition-colors duration-100 disabled:opacity-40 disabled:cursor-not-allowed"
-            :style="{
-              borderColor: 'var(--color-border)',
-              color: 'var(--color-text-secondary)',
-              background: 'transparent',
-            }"
-            @mouseenter="(e) => { if (!loading && importPhrase.trim()) (e.currentTarget as HTMLElement).style.background = 'var(--color-surface-tertiary)' }"
-            @mouseleave="(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }"
-          >
-            验证并导入
-          </button>
+          <div class="flex gap-2">
+            <button
+              @click="showImportInput = false"
+              class="flex-1 py-2 rounded-lg text-xs border cursor-pointer"
+              :style="{ borderColor: 'var(--color-border)', color: 'var(--color-text-tertiary)', background: 'transparent' }"
+            >
+              取消
+            </button>
+            <button
+              @click="handleImport"
+              :disabled="loading || !importPhrase.trim()"
+              class="flex-1 py-2 rounded-lg text-xs font-medium border-none cursor-pointer disabled:opacity-40"
+              :style="{ background: 'var(--color-accent)', color: '#fff' }"
+            >
+              {{ loading ? '验证中...' : '验证并恢复' }}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -212,16 +239,16 @@ function backToStart() {
         >
           ← 返回
         </button>
-        <div class="text-4xl mb-4">{{ importMode ? '📥' : '📝' }}</div>
+        <div class="text-4xl mb-4">📝</div>
         <h2 class="text-lg font-semibold mb-2" :style="{ color: 'var(--color-text-primary)' }">
-          {{ importMode ? '助记词已导入' : '请备份你的助记词' }}
+          请备份你的助记词
         </h2>
-        <p class="text-xs mb-5" :style="{ color: 'var(--color-text-secondary)' }">
-          {{ importMode
-            ? '接下来验证助记词以确保你有正确的备份。'
-            : '这 12 个单词是恢复密码库的 <strong>唯一方式</strong>。<br />请抄写下来或保存在安全的地方，<strong>不要截屏</strong>。'
-          }}
-        </p>
+        <!-- Fixed HTML rendering with v-html -->
+        <p
+          class="text-xs mb-5"
+          :style="{ color: 'var(--color-text-secondary)' }"
+          v-html="'这 12 个单词是恢复密码库的 <strong>唯一方式</strong>。<br />请抄写下来或保存在安全的地方，<strong>不要截屏</strong>。'"
+        />
         <div
           class="rounded-lg p-4 mb-6 text-left"
           :style="{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }"
@@ -247,14 +274,14 @@ function backToStart() {
           @mouseenter="(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-accent-hover)' }"
           @mouseleave="(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-accent)' }"
         >
-          {{ importMode ? '开始验证' : '我已备份，开始验证' }}
+          我已备份，开始验证
         </button>
       </div>
 
       <!-- ========== Step: Verify ========== -->
       <div v-else-if="step === 'verify'">
         <button
-          @click="step = 'show'"
+          @click="isImport ? backToStart() : (step = 'show')"
           class="flex items-center gap-1 text-xs border-none cursor-pointer bg-transparent mb-4"
           :style="{ color: 'var(--color-text-tertiary)' }"
           @mouseenter="(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text-secondary)' }"
@@ -337,7 +364,7 @@ function backToStart() {
       <div v-else-if="step === 'done'" class="text-center">
         <div class="text-4xl mb-4">✅</div>
         <h2 class="text-lg font-semibold mb-2" :style="{ color: 'var(--color-text-primary)' }">
-          助记词已{{ importMode ? '导入' : '验证' }}！
+          助记词已验证！
         </h2>
         <p class="text-xs mb-6" :style="{ color: 'var(--color-text-secondary)' }">
           请务必将你的 12 个助记词保存在安全的地方。<br />
