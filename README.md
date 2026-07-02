@@ -1,5 +1,59 @@
-# Vue 3 + TypeScript + Vite
+# 🔐 12Words - 去中心化极简安全保险箱 / Decentralized & Secure Vault
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+[English](#english) | [中文](#中文)
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+---
+
+## 中文
+
+`12Words` 是一款专为极客、Web3 爱好者及隐私至上者打造的**纯本地、零信任、去中心化**的数字资产与密码安全保险箱。我们坚信：**您的身家性命，不应托付给任何人的服务器。**
+
+### 📸 软件截图
+> *提示：将你通过方法 A 拿到的图片链接，替换掉下方的 `你的图片链接`*
+![12Words 主界面](你的图片链接1_主界面)
+![12Words 密码生成器](你的图片链接2_生成器)
+
+### ✨ 核心特性
+*   **🔑 助记词主锁：** 引入 Web3 级别的 12 个助记词（BIP39 算法）作为唯一的身份凭证与解密钥匙。告别传统易被暴力破解的弱密码。
+*   **🛡️ 绝对零信任（Zero-Knowledge）：** 100% 纯本地运行，不联网、无服务器。使用商业级 `AES-256-GCM` 算法对数据进行底层加密。
+*   **📂 全品类资产结构化管理：** 完美适配账号密码、API 密钥（如 DeepSeek/OpenAI）、软件卡密、银行卡、加密钱包私钥、敏感证件以及加密便签。
+*   **⚡ 内置随机密码生成器：** 纯本地一键生成 4-128 位高强度随机密码，支持数字、符号自定义组合。
+*   **🔒 剪贴板保护：** 密码复制后 20 秒自动从系统剪贴板物理清除，防止后台恶意软件窃取隐私。
+*   **💾 100% 掌控的冷备份：** 支持一键导出/导入加密库（`vault.encrypted`），通过 U 盘或个人网盘实现绝对安全的跨设备数据迁移。
+
+### 🚀 快速开始
+1. 前往本仓库 [Releases](https://github.com/xw321k/12Words/releases) 页面（或前往闲鱼官方渠道）下载最新版 Windows 安装包（`.msi`）。
+2. 打开软件，生成属于你的 12 个助记词（**请务必物理抄写备份！**）。
+3. 开始安全地存放你的数字资产。
+
+---
+
+## English
+
+`12Words` is a **100% local, zero-knowledge, and decentralized** digital asset and password vault built for geeks, Web3 enthusiasts, and privacy purists. We believe that **your most sensitive data should never be trusted to anyone else's server.**
+
+### 📸 Screenshots
+![12Words Main UI](你的图片链接1_主界面)
+
+### ✨ Key Features
+*   **🔑 Mnemonic Master Lock:** Uses Web3-standard 12-word seed phrases (BIP39) as the sole identity credential and decryption key. Say goodbye to easily brute-forced traditional passwords.
+*   **🛡️ Absolute Zero-Knowledge:** Operates entirely offline with zero network requests. All data is locked using industry-standard `AES-256-GCM` encryption locally.
+*   **📂 Structured Asset Categories:** Tailored for Accounts/Passwords, API Keys (e.g., DeepSeek/OpenAI), License Keys, Credit Cards, Crypto Wallet Private Keys, Secure Identities, and Encrypted Notes.
+*   **⚡ Built-in Password Generator:** Instant local generation of high-strength random passwords (4-128 characters) with customizable numbers and symbols.
+*   **🔒 Clipboard Protection:** Automatically clears copied passwords after 20 seconds to prevent background snooping.
+*   **💾 Sovereign Cold Backup:** Export/import your encrypted vault (`vault.encrypted`) with one click to transfer data securely via USB or private drives.
+
+### 🚀 Quick Start
+1. Go to the [Releases](https://github.com/xw321k/12Words/releases) page to check out our release info (Or purchase via our official Xianyu channel).
+2. Run the application and generate your unique 12 words (**Make sure to write them down on paper!**).
+3. Start safeguarding your digital assets with absolute peace of mind.
+
+---
+
+## 🛠️ Tech Stack / 技术栈
+*   **Backend:** Rust (Tauri)
+*   **Frontend:** Vue 3, Vite, Tailwind CSS
+*   **Encryption:** AES-256-GCM (Rust Crypto)
+
+## 📄 License
+This project is open-source under the [GPL-3.0 License](LICENSE).
