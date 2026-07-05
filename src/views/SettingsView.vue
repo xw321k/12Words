@@ -118,6 +118,7 @@ async function handleExport() {
               :style="{ color: 'var(--color-accent)' }">
               <span>🔗</span> {{ t('settings.aboutOpenSource') }}
             </button>
+            <p class="text-[11px]" :style="{ color: 'var(--color-text-secondary)' }">💬 643803458 AI学习交流Q群</p>
           </div>
         </div>
       </div>
