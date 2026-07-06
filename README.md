@@ -1,4 +1,4 @@
-# Ai Agent学习交流Q群 643803458
+# Ai Agent学习交流Q群 643803458 欢迎同样在用 Codex、Claude 或研究 AI 独立开发的同学交流互卷
 # 🔐 12Words - 去中心化极简安全保险箱 / Decentralized & Secure Vault
 
 [English](#english) | [中文](#中文)
